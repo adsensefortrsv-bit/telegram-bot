@@ -1,124 +1,104 @@
-import feedparser
-import asyncio
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
 
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes
+)
+
+# =========================
 # BOT TOKEN
-TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
+# =========================
+BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
 
-# YOUTUBE CHANNEL ID
-CHANNEL_ID = "UC8JFmTOgcgqHB1bxKnSlIGQ"
+# =========================
+# PHOTO / BANNER
+# =========================
+WELCOME_IMAGE = "https://i.ibb.co/HDf1gWgm/6060052766098395538.jpg"
 
-# SOCIAL LINKS
-CHANNEL_LINKS = """
-🔥 JOIN ALL OUR OFFICIAL CHANNELS 🔥
+# =========================
+# WELCOME MESSAGE
+# =========================
+WELCOME_TEXT = """
+╔══❖•ೋ° °ೋ•❖══╗
+      💎 𝗧𝗥𝗦𝗩 𝗘𝗗𝗜𝗧𝗭 💎
+╚══❖•ೋ° °ೋ•❖══╝
 
-▶ YouTube:
-https://youtube.com/@trsv-editz?si=-KSAODamxjPmgJ97
+🚀 <b>WELCOME TO TRSV EDITZ BOT</b>
 
-📸 Instagram:
-https://www.instagram.com/trsv.editz?igsh=NHJoaWxyNnNpa2g4
+⚡️ Auto YouTube Upload Notifications
+🎬 New Videos Instantly
+🔥 Stay Connected With Us
 
-💬 WhatsApp Channel:
-https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c
+━━━━━━━━━━━━━━━━━━
 
-📢 Telegram Channel:
-https://t.me/trsveditz
+👑 <b>OFFICIAL PLATFORMS</b>
 
-📘 Facebook Page:
-https://www.facebook.com/share/1CqE63Lf7S/
-
-📩 Email:
-trsvofficial66@gmail.com
+🔥 Enjoy Premium Experience
 """
 
-# USERS
-users = set()
-
-# LAST VIDEO
-last_video = None
-
+# =========================
 # START COMMAND
+# =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    user_id = update.effective_chat.id
+    keyboard = [
 
-    users.add(user_id)
+        [
+            InlineKeyboardButton(
+                "🎬 YOUTUBE",
+                url="https://youtube.com/@trsv-editz"
+            )
+        ],
 
-    await update.message.reply_text(
-        "🔥 WELCOME TO TRSV EDITZ BOT 🔥\n\n"
-        "You will automatically receive all new YouTube uploads 🚀\n\n"
-        + CHANNEL_LINKS
+        [
+            InlineKeyboardButton(
+                "📸 INSTAGRAM",
+                url="https://instagram.com/trsv.editz"
+            ),
+
+            InlineKeyboardButton(
+                "💬 TELEGRAM",
+                url="https://t.me/trsveditz"
+            )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "🌐 FACEBOOK",
+                url="https://facebook.com/"
+            )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "🔥 WHATSAPP",
+                url="https://whatsapp.com/channel/"
+            )
+        ]
+
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_photo(
+        photo=WELCOME_IMAGE,
+        caption=WELCOME_TEXT,
+        parse_mode="HTML",
+        reply_markup=reply_markup
     )
 
-# CHECK YOUTUBE
-async def check_youtube(app):
-
-    global last_video
-
-    while True:
-
-        try:
-
-            rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
-
-            feed = feedparser.parse(rss_url)
-
-            if feed.entries:
-
-                latest = feed.entries[0]
-
-                video_id = latest.yt_videoid
-                title = latest.title
-                link = latest.link
-
-                if last_video is None:
-
-                    last_video = video_id
-
-                elif last_video != video_id:
-
-                    last_video = video_id
-
-                    message = (
-                        f"🔥 NEW VIDEO UPLOADED 🔥\n\n"
-                        f"🎬 {title}\n\n"
-                        f"▶ WATCH NOW:\n{link}\n\n"
-                        + CHANNEL_LINKS
-                    )
-
-                    for user_id in users:
-
-                        try:
-
-                            await app.bot.send_message(
-                                chat_id=user_id,
-                                text=message
-                            )
-
-                        except:
-                            pass
-
-            await asyncio.sleep(60)
-
-        except Exception as e:
-
-            print(e)
-
-            await asyncio.sleep(60)
-
-# MAIN APP
-app = ApplicationBuilder().token(TOKEN).build()
+# =========================
+# BOT START
+# =========================
+app = Application.builder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 
-# BACKGROUND TASK
-async def post_init(app):
-
-    asyncio.create_task(check_youtube(app))
-
-app.post_init = post_init
-
-print("✅ TRSV BOT RUNNING...")
+print("🔥 BOT RUNNING SUCCESSFULLY 🔥")
 
 app.run_polling()
