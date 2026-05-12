@@ -10,13 +10,20 @@ from telegram import (
 from telegram.ext import (
     Application,
     CommandHandler,
-    ContextTypes
+    ContextTypes,
+    MessageHandler,
+    filters
 )
 
 # =========================================
 # BOT TOKEN
 # =========================================
 BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
+
+# =========================================
+# ADMIN ID
+# =========================================
+ADMIN_ID = 8420559244
 
 # =========================================
 # YOUTUBE CHANNEL ID
@@ -32,6 +39,19 @@ RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 # WELCOME IMAGE
 # =========================================
 WELCOME_IMAGE = "https://i.ibb.co/HDf1gWgm/6060052766098395538.jpg"
+
+# =========================================
+# SOCIAL LINKS
+# =========================================
+YOUTUBE_LINK = "https://youtube.com/@trsv-editz"
+
+INSTAGRAM_LINK = "https://instagram.com/trsv.editz"
+
+TELEGRAM_LINK = "https://t.me/trsveditz"
+
+WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
+
+FACEBOOK_LINK = "https://facebook.com/share/1CqE63Lf7S/"
 
 # =========================================
 # LOGGING
@@ -54,11 +74,13 @@ WELCOME_TEXT = """
        💎 𝗧𝗥𝗦𝗩 𝗘𝗗𝗜𝗧𝗭 💎
 ╚══❖•ೋ° °ೋ•❖══╝
 
-🚀 <b>WELCOME TO TRSV EDITZ BOT</b>
+🔥 <b>WELCOME TO TRSV EDITZ BOT</b>
 
-⚡️ Auto YouTube Upload Notifications
-🎬 Get New Videos Instantly
-🔥 Stay Connected With Our Community
+🎬 Auto YouTube Upload Alerts
+🚀 Instant Video Notifications
+📸 Instagram Updates
+💬 WhatsApp Channel
+⚡ Premium Telegram Experience
 
 ━━━━━━━━━━━━━━━━━━
 
@@ -79,33 +101,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 "🎬 YOUTUBE",
-                url="https://youtube.com/@trsv-editz"
+                url=YOUTUBE_LINK
             )
         ],
 
         [
             InlineKeyboardButton(
                 "📸 INSTAGRAM",
-                url="https://instagram.com/trsv.editz"
+                url=INSTAGRAM_LINK
             ),
 
             InlineKeyboardButton(
                 "💬 TELEGRAM",
-                url="https://t.me/trsveditz"
+                url=TELEGRAM_LINK
             )
         ],
 
         [
             InlineKeyboardButton(
                 "🔥 WHATSAPP CHANNEL",
-                url="https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
+                url=WHATSAPP_LINK
             )
         ],
 
         [
             InlineKeyboardButton(
                 "🌐 FACEBOOK PAGE",
-                url="https://facebook.com/share/1CqE63Lf7S/"
+                url=FACEBOOK_LINK
             )
         ]
 
@@ -121,15 +143,110 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # =========================================
-# USERS COUNT COMMAND
+# USERS COUNT
 # =========================================
 async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_user.id != ADMIN_ID:
+        return
 
     total = len(users)
 
     await update.message.reply_text(
         f"👥 Total Bot Users: {total}"
     )
+
+# =========================================
+# BROADCAST MESSAGE
+# =========================================
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    if len(context.args) == 0:
+
+        await update.message.reply_text(
+            "❌ Use:\n/broadcast your_message"
+        )
+
+        return
+
+    message = " ".join(context.args)
+
+    success = 0
+
+    for user_id in users:
+
+        try:
+
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=f"📢 BROADCAST MESSAGE\n\n{message}"
+            )
+
+            success += 1
+
+        except:
+            pass
+
+    await update.message.reply_text(
+        f"✅ Broadcast Sent To {success} Users"
+    )
+
+# =========================================
+# FORWARD USER MESSAGES TO ADMIN
+# =========================================
+async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user = update.effective_user
+
+    text = update.message.text
+
+    msg = f"""
+📩 NEW USER MESSAGE
+
+👤 Name: {user.first_name}
+🆔 User ID: {user.id}
+
+💬 Message:
+{text}
+"""
+
+    try:
+
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=msg
+        )
+
+    except Exception as e:
+        print(e)
+
+# =========================================
+# AUTO REPLY
+# =========================================
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    text = update.message.text.lower()
+
+    if "hello" in text:
+
+        await update.message.reply_text(
+            "👋 Hello Welcome To TRSV EDITZ BOT"
+        )
+
+    elif "youtube" in text:
+
+        await update.message.reply_text(
+            f"🎬 YouTube Channel:\n{YOUTUBE_LINK}"
+        )
+
+    elif "instagram" in text:
+
+        await update.message.reply_text(
+            f"📸 Instagram:\n{INSTAGRAM_LINK}"
+        )
 
 # =========================================
 # YOUTUBE CHECKER
@@ -147,6 +264,7 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
         newest_video = feed.entries[0]
 
         video_title = newest_video.title
+
         video_link = newest_video.link
 
         if video_link != latest_video:
@@ -174,18 +292,41 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
                     )
 
                 except Exception as e:
-                    print(f"Failed to send message to {user_id}: {e}")
+                    print(f"Failed to send to {user_id}: {e}")
 
 # =========================================
 # BOT SETUP
 # =========================================
 app = Application.builder().token(BOT_TOKEN).build()
 
+# =========================================
+# COMMANDS
+# =========================================
 app.add_handler(CommandHandler("start", start))
+
 app.add_handler(CommandHandler("users", users_count))
 
+app.add_handler(CommandHandler("broadcast", broadcast))
+
 # =========================================
-# AUTO CHECK EVERY 60 SECONDS
+# MESSAGE HANDLERS
+# =========================================
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        forward_messages
+    )
+)
+
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        auto_reply
+    )
+)
+
+# =========================================
+# AUTO CHECK YOUTUBE EVERY 60 SECONDS
 # =========================================
 job_queue = app.job_queue
 
@@ -195,9 +336,9 @@ job_queue.run_repeating(
     first=10
 )
 
+# =========================================
+# STARTING BOT
+# =========================================
 print("🔥 TRSV EDITZ BOT RUNNING 🔥")
 
-# =========================================
-# START BOT
-# =========================================
 app.run_polling()
