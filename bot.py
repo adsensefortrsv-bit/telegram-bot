@@ -10,7 +10,9 @@ from telegram import (
 from telegram.ext import (
     Application,
     CommandHandler,
-    ContextTypes
+    MessageHandler,
+    ContextTypes,
+    filters
 )
 
 # =========================================
@@ -19,12 +21,17 @@ from telegram.ext import (
 BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
 
 # =========================================
+# OWNER CHAT ID
+# =========================================
+OWNER_ID = "8420559244"
+
+# =========================================
 # YOUTUBE CHANNEL ID
 # =========================================
 CHANNEL_ID = "UC8JFmTOgcgqHB1bxKnSlIGQ"
 
 # =========================================
-# YOUTUBE RSS FEED
+# RSS FEED
 # =========================================
 RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 
@@ -59,10 +66,6 @@ WELCOME_TEXT = """
 ⚡️ Auto YouTube Upload Notifications
 🎬 Get New Videos Instantly
 🔥 Stay Connected With Our Community
-
-━━━━━━━━━━━━━━━━━━
-
-👑 <b>JOIN ALL OFFICIAL PLATFORMS</b>
 """
 
 # =========================================
@@ -71,7 +74,6 @@ WELCOME_TEXT = """
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_chat.id
-
     users.add(user_id)
 
     keyboard = [
@@ -97,15 +99,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [
             InlineKeyboardButton(
-                "🔥 WHATSAPP CHANNEL",
+                "🔥 WHATSAPP",
                 url="https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🌐 FACEBOOK PAGE",
-                url="https://facebook.com/share/1CqE63Lf7S/"
             )
         ]
 
@@ -121,14 +116,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # =========================================
-# USERS COUNT COMMAND
+# USER MESSAGE FORWARD
+# =========================================
+async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user = update.effective_user
+    text = update.message.text
+
+    msg = f"""
+📩 <b>NEW USER MESSAGE</b>
+
+👤 Name: {user.first_name}
+
+🆔 ID: {user.id}
+
+💬 Message:
+{text}
+"""
+
+    await context.bot.send_message(
+        chat_id=OWNER_ID,
+        text=msg,
+        parse_mode="HTML"
+    )
+
+# =========================================
+# USERS COUNT
 # =========================================
 async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     total = len(users)
 
     await update.message.reply_text(
-        f"👥 Total Bot Users: {total}"
+        f"👥 Total Users: {total}"
     )
 
 # =========================================
@@ -169,12 +189,11 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
                     await context.bot.send_message(
                         chat_id=user_id,
                         text=text,
-                        parse_mode="HTML",
-                        disable_web_page_preview=False
+                        parse_mode="HTML"
                     )
 
                 except Exception as e:
-                    print(f"Failed to send message to {user_id}: {e}")
+                    print(e)
 
 # =========================================
 # BOT SETUP
@@ -183,6 +202,11 @@ app = Application.builder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("users", users_count))
+
+# ALL USER MESSAGES
+app.add_handler(
+    MessageHandler(filters.TEXT & ~filters.COMMAND, forward_messages)
+)
 
 # =========================================
 # AUTO CHECK EVERY 60 SECONDS
@@ -195,7 +219,7 @@ job_queue.run_repeating(
     first=10
 )
 
-print("🔥 TRSV EDITZ BOT RUNNING 🔥")
+print("🔥 BOT RUNNING 🔥")
 
 # =========================================
 # START BOT
