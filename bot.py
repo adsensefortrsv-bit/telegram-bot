@@ -17,7 +17,7 @@ from modules.broadcast import save_user
 from modules.analytics import total_users
 from modules.auto_reply import AUTO_REPLIES
 
-BOT_TOKEN = "PUT_YOUR_BOT_TOKEN"
+BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
 
 ADMINS = [123456789]
 
