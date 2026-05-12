@@ -29,7 +29,7 @@ CHANNEL_ID = "UC8JFmTOgcgqHB1bxKnSlIGQ"
 RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 
 # =========================================
-# PHOTO / BANNER
+# WELCOME IMAGE
 # =========================================
 WELCOME_IMAGE = "https://i.ibb.co/HDf1gWgm/6060052766098395538.jpg"
 
@@ -63,8 +63,6 @@ WELCOME_TEXT = """
 ━━━━━━━━━━━━━━━━━━
 
 👑 <b>JOIN ALL OFFICIAL PLATFORMS</b>
-
-💜 Enjoy Premium Style Experience
 """
 
 # =========================================
@@ -123,6 +121,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # =========================================
+# USERS COUNT COMMAND
+# =========================================
+async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    total = len(users)
+
+    await update.message.reply_text(
+        f"👥 Total Bot Users: {total}"
+    )
+
+# =========================================
 # YOUTUBE CHECKER
 # =========================================
 latest_video = ""
@@ -168,11 +177,12 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
                     print(f"Failed to send message to {user_id}: {e}")
 
 # =========================================
-# BOT START
+# BOT SETUP
 # =========================================
 app = Application.builder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("users", users_count))
 
 # =========================================
 # AUTO CHECK EVERY 60 SECONDS
@@ -187,4 +197,7 @@ job_queue.run_repeating(
 
 print("🔥 TRSV EDITZ BOT RUNNING 🔥")
 
+# =========================================
+# START BOT
+# =========================================
 app.run_polling()
