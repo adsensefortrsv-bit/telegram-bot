@@ -1,3 +1,6 @@
+import feedparser
+import logging
+
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -12,89 +15,92 @@ from telegram.ext import (
     filters
 )
 
-import json
-import os
-
-# =========================
-# BOT SETTINGS
-# =========================
-
+# =========================================
+# BOT TOKEN
+# =========================================
 BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
 
-ADMIN_ID = 8420559244
+# =========================================
+# OWNER CHAT ID
+# =========================================
+OWNER_ID = "8420559244"
 
+# =========================================
+# YOUTUBE CHANNEL ID
+# =========================================
+CHANNEL_ID = "UC8JFmTOgcgqHB1bxKnSlIGQ"
+
+# =========================================
+# RSS FEED
+# =========================================
+RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
+
+# =========================================
+# WELCOME IMAGE
+# =========================================
 WELCOME_IMAGE = "https://i.ibb.co/HDf1gWgm/6060052766098395538.jpg"
 
-YOUTUBE_LINK = "https://youtube.com/@trsv-editz"
-INSTAGRAM_LINK = "https://instagram.com/trsv.editz"
-WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
+# =========================================
+# LOGGING
+# =========================================
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
-# =========================
-# USERS SYSTEM
-# =========================
+# =========================================
+# SAVE USERS
+# =========================================
+users = set()
 
-USERS_FILE = "users.json"
-
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, "w") as f:
-        json.dump([], f)
-
-def get_users():
-    with open(USERS_FILE, "r") as f:
-        return json.load(f)
-
-def save_user(user_id):
-
-    users = get_users()
-
-    if user_id not in users:
-
-        users.append(user_id)
-
-        with open(USERS_FILE, "w") as f:
-            json.dump(users, f)
-
-# =========================
-# START COMMAND
-# =========================
-
+# =========================================
+# WELCOME MESSAGE
+# =========================================
 WELCOME_TEXT = """
-🔥 <b>WELCOME TO TRSV EDITZ BOT</b>
+╔══❖•ೋ° °ೋ•❖══╗
+       💎 𝗧𝗥𝗦𝗩 𝗘𝗗𝗜𝗧𝗭 💎
+╚══❖•ೋ° °ೋ•❖══╝
 
-🎬 Auto YouTube Alerts
-📢 WhatsApp Channel
-📸 Instagram Updates
-🚀 Premium Telegram Bot
+🚀 <b>WELCOME TO TRSV EDITZ BOT</b>
 
-━━━━━━━━━━━━━━━━━━
-
-💎 Enjoy Premium Features
+⚡️ Auto YouTube Upload Notifications
+🎬 Get New Videos Instantly
+🔥 Stay Connected With Our Community
 """
 
+# =========================================
+# START COMMAND
+# =========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    user_id = update.effective_user.id
-
-    save_user(user_id)
+    user_id = update.effective_chat.id
+    users.add(user_id)
 
     keyboard = [
 
         [
             InlineKeyboardButton(
                 "🎬 YOUTUBE",
-                url=YOUTUBE_LINK
+                url="https://youtube.com/@trsv-editz"
             )
         ],
 
         [
             InlineKeyboardButton(
                 "📸 INSTAGRAM",
-                url=INSTAGRAM_LINK
+                url="https://instagram.com/trsv.editz"
             ),
 
             InlineKeyboardButton(
-                "💬 WHATSAPP",
-                url=WHATSAPP_LINK
+                "💬 TELEGRAM",
+                url="https://t.me/trsveditz"
+            )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "🔥 WHATSAPP",
+                url="https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
             )
         ]
 
@@ -109,113 +115,113 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# =========================
-# USERS COMMAND
-# =========================
+# =========================================
+# USER MESSAGE FORWARD
+# =========================================
+async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    text = update.message.text
 
-    if update.effective_user.id != ADMIN_ID:
-        return
+    msg = f"""
+📩 <b>NEW USER MESSAGE</b>
 
-    total = len(get_users())
+👤 Name: {user.first_name}
+
+🆔 ID: {user.id}
+
+💬 Message:
+{text}
+"""
+
+    await context.bot.send_message(
+        chat_id=OWNER_ID,
+        text=msg,
+        parse_mode="HTML"
+    )
+
+# =========================================
+# USERS COUNT
+# =========================================
+async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    total = len(users)
 
     await update.message.reply_text(
         f"👥 Total Users: {total}"
     )
 
-# =========================
-# BROADCAST COMMAND
-# =========================
+# =========================================
+# YOUTUBE CHECKER
+# =========================================
+latest_video = ""
 
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
-    if update.effective_user.id != ADMIN_ID:
-        return
+    global latest_video
 
-    if len(context.args) == 0:
+    feed = feedparser.parse(RSS_URL)
 
-        await update.message.reply_text(
-            "❌ Usage:\n/broadcast your message"
-        )
+    if len(feed.entries) > 0:
 
-        return
+        newest_video = feed.entries[0]
 
-    message = " ".join(context.args)
+        video_title = newest_video.title
+        video_link = newest_video.link
 
-    users = get_users()
+        if video_link != latest_video:
 
-    success = 0
-    failed = 0
+            latest_video = video_link
 
-    for user_id in users:
+            text = f"""
+🔥 <b>NEW VIDEO UPLOADED</b>
 
-        try:
+🎬 <b>{video_title}</b>
 
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=message
-            )
+🚀 WATCH NOW:
+{video_link}
+"""
 
-            success += 1
+            for user_id in users:
 
-        except:
+                try:
 
-            failed += 1
+                    await context.bot.send_message(
+                        chat_id=user_id,
+                        text=text,
+                        parse_mode="HTML"
+                    )
 
-    await update.message.reply_text(
-        f"✅ Broadcast Complete\n\n📤 Sent: {success}\n❌ Failed: {failed}"
-    )
+                except Exception as e:
+                    print(e)
 
-# =========================
-# AUTO REPLY SYSTEM
-# =========================
-
-async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    text = update.message.text.lower()
-
-    if "hello" in text:
-
-        await update.message.reply_text(
-            "👋 Hello From TRSV EDITZ BOT"
-        )
-
-    elif "youtube" in text:
-
-        await update.message.reply_text(
-            f"🎬 YouTube:\n{YOUTUBE_LINK}"
-        )
-
-    elif "instagram" in text:
-
-        await update.message.reply_text(
-            f"📸 Instagram:\n{INSTAGRAM_LINK}"
-        )
-
-    elif "whatsapp" in text:
-
-        await update.message.reply_text(
-            f"💬 WhatsApp:\n{WHATSAPP_LINK}"
-        )
-
-# =========================
-# MAIN SYSTEM
-# =========================
-
+# =========================================
+# BOT SETUP
+# =========================================
 app = Application.builder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("users", users))
-app.add_handler(CommandHandler("broadcast", broadcast))
+app.add_handler(CommandHandler("users", users_count))
 
+# ALL USER MESSAGES
 app.add_handler(
-    MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        auto_reply
-    )
+    MessageHandler(filters.TEXT & ~filters.COMMAND, forward_messages)
 )
 
-print("🔥 TRSV EDITZ BOT STARTED SUCCESSFULLY")
+# =========================================
+# AUTO CHECK EVERY 60 SECONDS
+# =========================================
+job_queue = app.job_queue
 
+job_queue.run_repeating(
+    check_youtube,
+    interval=60,
+    first=10
+)
+
+print("🔥 BOT RUNNING 🔥")
+
+# =========================================
+# START BOT
+# =========================================
 app.run_polling()
