@@ -18,7 +18,7 @@ from telegram.ext import (
 # =========================================
 # BOT TOKEN
 # =========================================
-BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
+BOT_TOKEN = "8435083843:AAHlTI3Nk9VV35oHUzJnuZ0b1dJd9P1tkg0"
 
 # =========================================
 # ADMIN ID
@@ -216,6 +216,12 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =========================================
 async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    if not update.message:
+        return
+
+    if update.message.text.startswith("/"):
+        return
+
     user = update.effective_user
 
     text = update.message.text
@@ -245,33 +251,36 @@ async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =========================================
 async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    if not update.message:
+        return
+
     text = update.message.text.lower()
 
-    if "hello" in text:
+    if text == "hello":
 
         await update.message.reply_text(
             "👋 Hello Welcome To TRSV EDITZ BOT"
         )
 
-    elif "youtube" in text:
+    elif text == "youtube":
 
         await update.message.reply_text(
             f"🎬 YouTube Channel:\n{YOUTUBE_LINK}"
         )
 
-    elif "instagram" in text:
+    elif text == "instagram":
 
         await update.message.reply_text(
             f"📸 Instagram:\n{INSTAGRAM_LINK}"
         )
 
-    elif "facebook" in text:
+    elif text == "facebook":
 
         await update.message.reply_text(
             f"🌐 Facebook Page:\n{FACEBOOK_LINK}"
         )
 
-    elif "business" in text:
+    elif text == "business":
 
         await update.message.reply_text(
             f"📩 Business Email:\n{BUSINESS_EMAIL}"
@@ -297,12 +306,16 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
         video_link = newest_video.link
 
         try:
+
             video_id = video_link.split("v=")[1]
+
             thumbnail = (
                 f"https://img.youtube.com/vi/"
                 f"{video_id}/maxresdefault.jpg"
             )
+
         except:
+
             thumbnail = WELCOME_IMAGE
 
         if video_link != latest_video:
