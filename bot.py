@@ -15,7 +15,13 @@ from telegram.ext import (
 import json
 import os
 
+# =========================
+# BOT SETTINGS
+# =========================
+
 BOT_TOKEN = "8488142902:AAGL781OPUQoWAe5WwUiFIR8lS-8vG0JFDg"
+
+ADMIN_ID = 8420559244
 
 WELCOME_IMAGE = "https://i.ibb.co/HDf1gWgm/6060052766098395538.jpg"
 
@@ -23,9 +29,9 @@ YOUTUBE_LINK = "https://youtube.com/@trsv-editz"
 INSTAGRAM_LINK = "https://instagram.com/trsv.editz"
 WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
 
-ADMIN_ID = 8420559244
-
-# ================= USERS =================
+# =========================
+# USERS SYSTEM
+# =========================
 
 USERS_FILE = "users.json"
 
@@ -38,15 +44,19 @@ def get_users():
         return json.load(f)
 
 def save_user(user_id):
+
     users = get_users()
 
     if user_id not in users:
+
         users.append(user_id)
 
         with open(USERS_FILE, "w") as f:
             json.dump(users, f)
 
-# ================= START =================
+# =========================
+# START COMMAND
+# =========================
 
 WELCOME_TEXT = """
 🔥 <b>WELCOME TO TRSV EDITZ BOT</b>
@@ -57,11 +67,14 @@ WELCOME_TEXT = """
 🚀 Premium Telegram Bot
 
 ━━━━━━━━━━━━━━━━━━
+
+💎 Enjoy Premium Features
 """
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
+
     save_user(user_id)
 
     keyboard = [
@@ -96,7 +109,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# ================= USERS COUNT =================
+# =========================
+# USERS COMMAND
+# =========================
 
 async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -109,7 +124,9 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Total Users: {total}"
     )
 
-# ================= BROADCAST =================
+# =========================
+# BROADCAST COMMAND
+# =========================
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -117,56 +134,74 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if len(context.args) == 0:
+
         await update.message.reply_text(
-            "Usage:\n/broadcast your message"
+            "❌ Usage:\n/broadcast your message"
         )
+
         return
 
-    msg = " ".join(context.args)
+    message = " ".join(context.args)
 
     users = get_users()
 
     success = 0
+    failed = 0
 
     for user_id in users:
 
         try:
+
             await context.bot.send_message(
                 chat_id=user_id,
-                text=msg
+                text=message
             )
 
             success += 1
 
         except:
-            pass
+
+            failed += 1
 
     await update.message.reply_text(
-        f"✅ Sent to {success} users"
+        f"✅ Broadcast Complete\n\n📤 Sent: {success}\n❌ Failed: {failed}"
     )
 
-# ================= AUTO REPLY =================
+# =========================
+# AUTO REPLY SYSTEM
+# =========================
 
 async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.lower()
 
     if "hello" in text:
+
         await update.message.reply_text(
-            "👋 Hello from TRSV EDITZ BOT"
+            "👋 Hello From TRSV EDITZ BOT"
         )
 
     elif "youtube" in text:
+
         await update.message.reply_text(
-            YOUTUBE_LINK
+            f"🎬 YouTube:\n{YOUTUBE_LINK}"
         )
 
     elif "instagram" in text:
+
         await update.message.reply_text(
-            INSTAGRAM_LINK
+            f"📸 Instagram:\n{INSTAGRAM_LINK}"
         )
 
-# ================= MAIN =================
+    elif "whatsapp" in text:
+
+        await update.message.reply_text(
+            f"💬 WhatsApp:\n{WHATSAPP_LINK}"
+        )
+
+# =========================
+# MAIN SYSTEM
+# =========================
 
 app = Application.builder().token(BOT_TOKEN).build()
 
@@ -181,6 +216,6 @@ app.add_handler(
     )
 )
 
-print("🔥 TRSV EDITZ BOT RUNNING")
+print("🔥 TRSV EDITZ BOT STARTED SUCCESSFULLY")
 
 app.run_polling()
