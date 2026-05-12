@@ -77,7 +77,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 "🔥 WHATSAPP",
-                url="https://whatsapp.com/channel/"
+                url="https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
             )
         ]
 
