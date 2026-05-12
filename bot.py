@@ -53,6 +53,8 @@ WHATSAPP_LINK = "https://whatsapp.com/channel/0029VbCcbE9Au3aYo9SUZ61c"
 
 FACEBOOK_LINK = "https://facebook.com/share/1CqE63Lf7S/"
 
+BUSINESS_EMAIL = "Trsvofficial66@gmail.com"
+
 # =========================================
 # LOGGING
 # =========================================
@@ -69,7 +71,7 @@ users = set()
 # =========================================
 # WELCOME MESSAGE
 # =========================================
-WELCOME_TEXT = """
+WELCOME_TEXT = f"""
 ╔══❖•ೋ° °ೋ•❖══╗
        💎 𝗧𝗥𝗦𝗩 𝗘𝗗𝗜𝗧𝗭 💎
 ╚══❖•ೋ° °ೋ•❖══╝
@@ -81,6 +83,14 @@ WELCOME_TEXT = """
 📸 Instagram Updates
 💬 WhatsApp Channel
 ⚡ Premium Telegram Experience
+
+━━━━━━━━━━━━━━━━━━
+
+📩 <b>FOR BUSINESS</b>
+✉️ {BUSINESS_EMAIL}
+
+🌐 <b>FACEBOOK PAGE</b>
+{FACEBOOK_LINK}
 
 ━━━━━━━━━━━━━━━━━━
 
@@ -128,6 +138,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton(
                 "🌐 FACEBOOK PAGE",
                 url=FACEBOOK_LINK
+            )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "📩 FOR BUSINESS",
+                url=f"mailto:{BUSINESS_EMAIL}"
             )
         ]
 
@@ -248,6 +265,18 @@ async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📸 Instagram:\n{INSTAGRAM_LINK}"
         )
 
+    elif "facebook" in text:
+
+        await update.message.reply_text(
+            f"🌐 Facebook Page:\n{FACEBOOK_LINK}"
+        )
+
+    elif "business" in text:
+
+        await update.message.reply_text(
+            f"📩 Business Email:\n{BUSINESS_EMAIL}"
+        )
+
 # =========================================
 # YOUTUBE CHECKER
 # =========================================
@@ -267,6 +296,15 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
         video_link = newest_video.link
 
+        try:
+            video_id = video_link.split("v=")[1]
+            thumbnail = (
+                f"https://img.youtube.com/vi/"
+                f"{video_id}/maxresdefault.jpg"
+            )
+        except:
+            thumbnail = WELCOME_IMAGE
+
         if video_link != latest_video:
 
             latest_video = video_link
@@ -276,19 +314,27 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
 🎬 <b>{video_title}</b>
 
-🚀 WATCH NOW:
+🚀 WATCH NOW 👇
 {video_link}
+
+━━━━━━━━━━━━━━━━━━
+
+📩 <b>FOR BUSINESS</b>
+✉️ {BUSINESS_EMAIL}
+
+🌐 <b>FACEBOOK PAGE</b>
+{FACEBOOK_LINK}
 """
 
             for user_id in users:
 
                 try:
 
-                    await context.bot.send_message(
+                    await context.bot.send_photo(
                         chat_id=user_id,
-                        text=text,
-                        parse_mode="HTML",
-                        disable_web_page_preview=False
+                        photo=thumbnail,
+                        caption=text,
+                        parse_mode="HTML"
                     )
 
                 except Exception as e:
