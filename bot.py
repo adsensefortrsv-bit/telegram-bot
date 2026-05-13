@@ -26,6 +26,11 @@ BOT_TOKEN = "8435083843:AAHlTI3Nk9VV35oHUzJnuZ0b1dJd9P1tkg0"
 ADMIN_ID = 8420559244
 
 # =========================================
+# TELEGRAM CHANNEL USERNAME
+# =========================================
+CHANNEL_USERNAME = "@trsveditz"
+
+# =========================================
 # YOUTUBE CHANNEL ID
 # =========================================
 CHANNEL_ID = "UC8JFmTOgcgqHB1bxKnSlIGQ"
@@ -199,6 +204,12 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =========================================
 async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    if not update.message:
+        return
+
+    if update.message.text.startswith("/"):
+        return
+
     user = update.effective_user
 
     text = update.message.text
@@ -227,6 +238,9 @@ async def forward_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # AUTO REPLY
 # =========================================
 async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if not update.message:
+        return
 
     text = update.message.text.lower()
 
@@ -280,6 +294,7 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 {video_link}
 """
 
+            # SEND TO BOT USERS
             for user_id in users:
 
                 try:
@@ -293,6 +308,19 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
                 except Exception as e:
                     print(f"Failed to send to {user_id}: {e}")
+
+            # SEND TO TELEGRAM CHANNEL
+            try:
+
+                await context.bot.send_message(
+                    chat_id=CHANNEL_USERNAME,
+                    text=text,
+                    parse_mode="HTML",
+                    disable_web_page_preview=False
+                )
+
+            except Exception as e:
+                print(f"Channel Error: {e}")
 
 # =========================================
 # BOT SETUP
