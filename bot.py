@@ -265,7 +265,7 @@ async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =========================================
 # YOUTUBE CHECKER
 # =========================================
-latest_video = ""
+latest_video = None
 
 async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
@@ -281,6 +281,12 @@ async def check_youtube(context: ContextTypes.DEFAULT_TYPE):
 
         video_link = newest_video.link
 
+        # FIRST START PROTECTION
+        if latest_video is None:
+            latest_video = video_link
+            return
+
+        # NEW VIDEO CHECK
         if video_link != latest_video:
 
             latest_video = video_link
